@@ -1,0 +1,15 @@
+{% extends 'base/base.html' %}
+{% load material_form %}
+{% load staticfiles %}
+{% block pagetitle %} MiniQuora | Login {% endblock %}
+{% block content %}
+<p>hii this is home</p>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'authentication/js/login.js' %}" type="text/javascript"></script>
+<script>
+    $(document).ready(function() {
+        Login.init();
+    });
+</script>
+{% endblock %}
