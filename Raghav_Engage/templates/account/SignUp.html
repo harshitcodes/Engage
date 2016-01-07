@@ -1,0 +1,16 @@
+{% load staticfiles%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SignUp</title>
+</head>
+This is SignUp.
+<body>
+<form method="POST" action="">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit">
+</form>
+</body>
+{{ Message }} {{ user }}
+</html>
