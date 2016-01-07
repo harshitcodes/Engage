@@ -12,7 +12,7 @@ class MyUser(AbstractUser):
     # street_address = models.CharField(max_length = 100, null=True, blank=True)
     # city = models.ForeignKey(City, blank=True, null=True, on_delete=models.SET_NULL)
     # pincode = models.CharField(max_length=8, default="0000000")
-    following = models.ManyToManyField("self", symmetrical = False, related_name = "follower")
+    following = models.ManyToManyField("self", symmetrical = False, related_name = "follower",null=True,blank=True)
     class Meta:
     	unique_together = (['email'])
     	verbose_name = 'User'
@@ -33,7 +33,7 @@ class Profile(models.Model):
     first_name = models.CharField(max_length = 30)
     last_name = models.CharField(max_length = 30, blank = True)
     Profile_Pic = models.ImageField(upload_to = 'User_ProfilePics/', blank = True)
-    followers = models.ManyToManyField(MyUser, related_name = 'following_me')
+    #followers = models.ManyToManyField(MyUser, related_name = 'following_me', null=True)
     skill_set = models.CharField(max_length = 20, choices = SKILL_SET, default = SKILL_SET[0])
 
     def __str__(self):

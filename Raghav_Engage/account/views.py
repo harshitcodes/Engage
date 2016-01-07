@@ -11,10 +11,12 @@ def base(request):
 
 
 def signup(request):
+    if request.user.is_authenticated():
+        return render(request,'account/home.html',)
     form = SignUp(request.POST)
     if form.is_valid():
         user=form.save();
-        message = "The User is registered,Refill The form for registering more"
+        message = "The User is registered,Refill The form for registering more users like"
         context = {'Message':message,'form':form,"user":user}
         return render(request,'account/Signup.html',context)
     else:
@@ -41,20 +43,20 @@ def handlelogin(request):
         context = {"user":user}
         print("Authenticated user")
         return render(request,'account/home.html',context)
-    else:
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            print("In form is valid")
-            auth_login(request,user)
-            context = {"user":user}
-            return render(request,'account/home.html',context)
-        if not form.is_valid():
-            form = LoginForm()
-            Message = "Error in form"
-            context = {'form':form}
-            print("IN FORM ISNOT VALID")
-            return render(request,'account/login.html',context)
+
+    form = LoginForm(request.POST)
+    if form.is_valid():
+        user = form.get_user()
+        print("In form is valid")
+        auth_login(request,user)
+        context = {"user":user}
+        return render(request,'account/home.html',context)
+    if not form.is_valid():
+        form = LoginForm()
+        Message = "Error in form"
+        context = {'form':form}
+        print("IN FORM ISNOT VALID")
+        return render(request,'account/login.html',context)
     # newform = LoginForm()
     # context = {"form":newform}
     # return render(request,'account/login.html',context)
@@ -62,5 +64,14 @@ def handlelogin(request):
 @login_required
 @require_GET
 def home(request):
-    user = request.user
-    return render(request,'account/home.html',{'user':user})
+    if request.user.is_authenticated():
+        user = request.user
+        context = {"user":user}
+        print("Authenticated user")
+        return render(request,'account/home.html',context)
+    else:
+        form = LoginForm()
+        Message = "Error in form"
+        context = {'form':form}
+        print("IN FORM ISNOT VALID")
+        return render(request,'account/login.html',context)

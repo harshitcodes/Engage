@@ -32,8 +32,10 @@ class LoginForm(forms.Form):
 
     def clean(self):
         username = self.cleaned_data.get('username')
+        print(self.cleaned_data)
         password = self.cleaned_data.get('password')
         if username and password:
+            print("In U and P")
             self.user_cache = authenticate(username = username, password = password)
             if self.user_cache is None:
                 raise forms.ValidationError('Invalid username or password')
