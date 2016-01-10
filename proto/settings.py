@@ -38,8 +38,10 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'account',
     'material',
+    'bootstrap3',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -106,8 +108,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-STATIC_URL = '/static/'
 STATICFILES_DIRS = [ os.path.join(BASE_DIR, 'static') ]
+STATIC_URL = '/static/'
+
 
 AUTH_USER_MODEL = 'account.MyUser'
 
@@ -123,6 +126,6 @@ LOGIN_REDIRECT_URL = 'home'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'harshit.bvcoe'
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_PASSWORD = 'fjfmwzecuqdaayjj'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True

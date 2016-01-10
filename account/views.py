@@ -10,30 +10,35 @@ from django.core.mail import EmailMultiAlternatives
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
 from django.template import loader
+from django.db.models.signals import pre_save
+from django.template import RequestContext
+from django.views.generic import ListView
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from .forms import LoginForm, SignupForm
-from .models import MyUser
+from .forms import LoginForm, SignupForm, ProfileForm
+from django.db.models import Q
+from .models import MyUser, SkillSet
 
 # Create your views here.
 @require_http_methods(['GET', 'POST'])
 def base(request):
-	if request.user.is_authenticated():
-		return redirect('home')
-	if request.method == 'GET':
-		f = LoginForm();
-	else:
-		f = LoginForm(request.POST)
-		if f.is_valid():
-			user = f.get_user()
-			auth_login(request,user)
-			return JsonResponse(data = {'success': True})
+    if request.user.is_authenticated():
+        return redirect('home')
+    if request.method == 'GET':
+        f = LoginForm();
+    else:
+        f = LoginForm(request.POST)
+        if f.is_valid():
+            user = f.get_user()
+            auth_login(request, user)
+            print("Valid")
+            #return JsonResponse(data = {'success': True})
+            return redirect('home')
+        else:
+            data = {'error': True, 'errors' : dict(f.errors.items())}
+            return	JsonResponse(status = 400, data = data)
 
-		else:
-			data = {'error': True, 'errors' : dict(f.errors.items())}
-			return	JsonResponse(status = 400, data = data)
-
-	return render(request, 'authentication/login.html',{'form': f})		
+    return render(request, 'authentication/login.html',{'form': f})		
 
 
 @require_http_methods(['GET', 'POST'])
@@ -68,6 +73,7 @@ def logout(request):
 @require_GET
 @login_required
 def home(request):
+    print(request.user.profile_pic)
     return render(request, 'base/loggedin.html');    
 
 
@@ -92,4 +98,188 @@ def activate(request, uid = None, token = None):
         user.save()
         return render(request, 'authentication/activation_success.html')
     else:
-        return render(request, 'authentication/activation_failure.html')    
+        return render(request, 'authentication/activation_failure.html')
+
+
+@require_http_methods(['GET', 'POST'])
+def forgot_password(request):
+    if request.user.is_authenticated():
+        return redirect('home')
+    if request.method == 'GET':
+        f = ForgotPasswordForm()
+    if request.method == 'POST':
+        f = ForgotPasswordForm(request.POST)
+        if f.is_valid():
+            user = MyUser.objects.get(email = f.cleaned_data['email'])
+            email_body_context = {
+                'username' : user.username,
+                'token': default_token_generator.make_token(user),
+                'uid' : user.id,
+                'protocol': 'https' if settings.USE_HTTPS else 'http',
+                'domain' : get_current_site(request).domain
+            }
+            body = loader.render_to_string('authentication/forgot_password_email_body_text.html', email_body_context)
+            email_message = EmailMultiAlternatives('Reset your password on MiniQuora',body, settings.DEFAULT_FROM_EMAIL, [user.email])
+            email_message.send()
+            context = {'email': user.email}
+            return render(request, 'authentication/forgot_password_email_sent.html', context)
+    context = {'form': f}
+    return render(request, 'authentication/forgot_password.html',context)
+
+@require_http_methods(['GET', 'POST'])
+def reset_password(request, uid = None, token = None):
+    if request.user.is_authenticated():
+        return redirect('home')
+    try:
+        user = MyUser.objects.get(id = uid)
+    except(MyUser.DoesNotExist):
+        user = None
+    if not user or not default_token_generator.check_token(user,token):
+        context = {'validlink': False}
+        return render(request, 'authentication/set_password.html', context)
+    if request.method == 'GET':
+        f = SetPasswordForm()
+    else:
+        f = SetPasswordForm(request.POST)
+        if f.is_valid():
+            user.set_password(f.cleaned_data['password1'])
+            user.save()
+            return redirect('base')
+    context = {'validlink': True, 'form': f}
+    return render(request, 'authentication/set_password.html', context)
+
+
+# def handle_uploaded_pic(self):
+#     dest = open('profile_pics/', wb+)
+#     for chunk in self.chunks():
+#         dest.write(chunk)
+#     dest.close()
+
+@require_http_methods(['GET', 'POST'])
+@login_required
+def edit_profile(request):
+    if request.method == 'GET':
+        print("in to get profile")
+        form = ProfileForm(instance = request.user)
+    if request.method == 'POST':
+        print("Before")
+        form = ProfileForm(request.POST or None, request.FILES, instance = request.user)
+        print(request.user)
+        if form.is_valid():
+            # print(request.FILES['profile_pic'])
+            user_profile = form.save(commit = False)#getting the instance of the form so that it doesn't generate a new instance every time.
+            # print(user_profile)
+            user_profile.user = request.user
+            # if request.FILES:
+            #     new_profile_pic = MyUser(profile_pic = request.FILES['profile_pic'])
+            #     new_profile_pic.save()
+            # handle_uploaded_pic(request.FILES['profile_pic'])
+            form.save()
+            context = {'save_success': 'True'}
+            return redirect('home')
+            
+        else:
+            print(form.errors)
+            data = {'error': True, 'errors': dict(form.errors.items())}
+            return JsonResponse( status = 400, data = data)
+
+    print("Before rendering")        
+    return render(request, 'authentication/profile.html', {'form': form, 'my_skills': request.user.user_skills.all()})  
+
+
+# MIN_SEARCH_CHARS = 2
+# "Minimum number of characters required in a search"
+
+# class SkillSetList(ListView):
+#     model = SkillSet
+#     context_object_name = "skills"
+#     # template_name = "templates/authentication/skillset_list.html"
+
+#     def dispatch(self, request, *args, **kwargs):
+#         self.request = request
+#         print("hii")
+#         return super(SkillSetList, self).dispatch(request, *args, **kwargs)
+
+#     def get_query_set(self):
+#         """returns all the skills for display in the main table"""
+#         return super(SkillSetList, self).get_query_set()
+
+
+#     def get_context_data(self, **kwargs):
+#         context = super(SkillSetList, self).get_context_data(**kwargs)
+
+#         global MIN_SEARCH_CHARS
+
+#         search_text = "" #Assume no search
+#         if self.request.method == "GET":
+#             search_text = self.request.GET.get("search_text", "").strip().lower()
+#             if len(search_text) < MIN_SEARCH_CHARS:
+#                 search_text = "" #Ignore search
+
+#             if search_text != "":
+#                 skill_search_results = SkillSet.objects.filter(name__contains = search_text)
+
+#             else:
+#                 skill_search_results = []
+
+#             #Add items to context:
+#             #the search text for display and result set
+#             context["search_text"] = search_text
+#             context["skill_search_results"] = skill_search_results
+
+#             #for display under search form
+#             context["MIN_SEARCH_CHARS"] = MIN_SEARCH_CHARS
+
+#             return context
+
+# def toggle_skill_save(request, skill_id):
+#     print("toggle")
+#     skill = None
+#     try:
+#         """in this method there is only one skill with this id but the query returns a list thus the index[0]"""
+#         skill = SkillSet.objects.filter(id = skill_id)[0]
+
+#     except SkillSet.DoesNotExist as e:
+#         raise ValueError("Unknown skill.id =" + str(skill_id) + ". Original Error: " + str(e))
+            
+#     skill.is_saved =    not skill.is_saved
+#     skill.save() #commit the change to database
+#     skill.of_user.add(request.user)
+
+#     return redirect("skillset_list")
+
+
+@login_required
+@require_GET
+def search(request):
+    query_term = request.GET.get('q')
+    data = {'skills': []}
+    print(query_term)
+    if not query_term:
+        return JsonResponse(data)
+    skills = SkillSet.objects.filter(
+        Q(tags__icontains = query_term)
+    )
+    # print(request.user.user_skills)
+    data['skills'] = [{'id' : q.id, 'tags' : q.tags} for q in skills]
+    return JsonResponse(data)
+
+@csrf_exempt
+@login_required
+@require_POST
+def save(request):
+    print(request.POST) 
+    skill = request.POST.get('skill')
+    # print(skill)
+    obj =  SkillSet.objects.get(pk = skill)
+    user = request.user.user_skills.add(obj)
+    print(obj.of_user.all())
+    print(request.user.user_skills.all())
+    print(obj)
+    # request.user.user_skills += obj
+    # data = {'user_skills' : []}
+    print(request.user)
+    # print(request.user_set.all())
+    context = { 'my_skills' : request.user.user_skills.all() }
+    print(context['my_skills'])
+    return render(request, 'base/loggedin.html', context)

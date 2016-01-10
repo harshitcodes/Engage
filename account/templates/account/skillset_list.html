@@ -1,0 +1,83 @@
+{% extends 'account/base.html' %}
+{% load staticfiles %}
+{% block pagetitle %} Engage | AddSkills {% endblock %}
+{% block content %}
+{% load humanize %}
+
+
+<div class="container">
+
+   <input type="text" id="search" placeholder="Search Skills">
+      <ul class="collection with-header">
+         <li class="collection-header">Type something on the top!!!</li>
+      </ul>
+</div>
+
+
+
+
+
+	<div class="container-full ">
+		<nav>
+	    <div class="nav-w  rapper search_section blue">
+	      <form id = "search_skills_form_id" method="get", action= "{% url 'skillset_list' %}">
+	        <div class="input-field">
+	          <input id="search_text" type="search" required name = "search_text">
+	          <label for="search" id="id_pic_submit_button" type = "submit" value = "Search For Skills"><i class="material-icons">search</i></label>
+	          <p class = "black">(Requires {{MIN_SEARCH_CHARS | apnumber }}) or more characters</p>
+	          <!-- I've put "red-text" class to emphasize -->
+	        </div>
+	      </form>
+	      {% if  search_text|length >= MIN_SEARCH_CHARS %}
+         <p><b>Searching for &quot;<code>{{ search_text }}</code>&quot;:</b>
+         {% if  skill_search_results.count > 0 %}
+            </p>
+            <ul>
+               {% for  skill in skill_search_results %} {# No colon after "skill_search_results" #}
+                  <li>{{ skill.tags }}</li>
+               {% endfor %}
+            </ul>
+         {% else %}
+            <i>No results</i></p>
+         {% endif %}
+      {% endif %}
+	    </div>
+	  	</nav>
+	</div>
+	<div class="content_section">
+      <h1>Skill Set</h1>
+ 
+      {% if  skills.count == 0 %}
+         <p><i>There are no skills in the database.</i></p>
+      {% else %}
+         <table>
+            <tr>
+               <th colspan="2">Skills</th>
+               <th>Saved?</th>
+            </tr>
+            {% for  skill in skills %} {# No colon after "skills" #}
+               <tr>
+                  <td class="td__skill_name">{{ skill.tags }}</td>
+                  <td class="{% if not skill.is_saved %}un{% endif %}Saved"
+                     ><a href="{% url 'toggle_skill_save' skill.id %}">
+                     {% if skill.is_saved %}Remove{% else %}Save{% endif %}</a></td>
+               </tr>
+            {% endfor %}
+         </table>
+      {% endif %}
+   </div>
+   <p>{{request.user}}</p>
+   {% endblock %}
+
+   {% block scripts %}
+   <script language="javascript">
+      document.getElementById("search_text").focus();
+   </script>
+   <script src = "{% static 'base/js/skill_search.js' %}" type = "text/javascript"></script>
+   <script>
+      $(document).ready(function(){
+         Skill_search.init('search');
+      }); 
+   </script>
+   {% endblock%}
+
