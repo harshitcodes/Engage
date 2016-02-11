@@ -15,9 +15,11 @@ from django.template import RequestContext
 from django.views.generic import ListView
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from .forms import LoginForm, SignupForm, ProfileForm
+from .forms import *
 from django.db.models import Q
-from .models import MyUser, SkillSet
+from .models import *
+from feed.views import *
+
 
 # Create your views here.
 @require_http_methods(['GET', 'POST'])
@@ -73,8 +75,9 @@ def logout(request):
 @require_GET
 @login_required
 def home(request):
-    print(request.user.profile_pic)
-    return render(request, 'base/loggedin.html');    
+    # print(request.user.profile_pic)
+
+    return redirect('timeline')
 
 
 
@@ -167,6 +170,7 @@ def edit_profile(request):
         print(request.user)
         if form.is_valid():
             # print(request.FILES['profile_pic'])
+
             user_profile = form.save(commit = False)#getting the instance of the form so that it doesn't generate a new instance every time.
             # print(user_profile)
             user_profile.user = request.user
@@ -185,68 +189,6 @@ def edit_profile(request):
 
     print("Before rendering")        
     return render(request, 'authentication/profile.html', {'form': form, 'my_skills': request.user.user_skills.all()})  
-
-
-# MIN_SEARCH_CHARS = 2
-# "Minimum number of characters required in a search"
-
-# class SkillSetList(ListView):
-#     model = SkillSet
-#     context_object_name = "skills"
-#     # template_name = "templates/authentication/skillset_list.html"
-
-#     def dispatch(self, request, *args, **kwargs):
-#         self.request = request
-#         print("hii")
-#         return super(SkillSetList, self).dispatch(request, *args, **kwargs)
-
-#     def get_query_set(self):
-#         """returns all the skills for display in the main table"""
-#         return super(SkillSetList, self).get_query_set()
-
-
-#     def get_context_data(self, **kwargs):
-#         context = super(SkillSetList, self).get_context_data(**kwargs)
-
-#         global MIN_SEARCH_CHARS
-
-#         search_text = "" #Assume no search
-#         if self.request.method == "GET":
-#             search_text = self.request.GET.get("search_text", "").strip().lower()
-#             if len(search_text) < MIN_SEARCH_CHARS:
-#                 search_text = "" #Ignore search
-
-#             if search_text != "":
-#                 skill_search_results = SkillSet.objects.filter(name__contains = search_text)
-
-#             else:
-#                 skill_search_results = []
-
-#             #Add items to context:
-#             #the search text for display and result set
-#             context["search_text"] = search_text
-#             context["skill_search_results"] = skill_search_results
-
-#             #for display under search form
-#             context["MIN_SEARCH_CHARS"] = MIN_SEARCH_CHARS
-
-#             return context
-
-# def toggle_skill_save(request, skill_id):
-#     print("toggle")
-#     skill = None
-#     try:
-#         """in this method there is only one skill with this id but the query returns a list thus the index[0]"""
-#         skill = SkillSet.objects.filter(id = skill_id)[0]
-
-#     except SkillSet.DoesNotExist as e:
-#         raise ValueError("Unknown skill.id =" + str(skill_id) + ". Original Error: " + str(e))
-            
-#     skill.is_saved =    not skill.is_saved
-#     skill.save() #commit the change to database
-#     skill.of_user.add(request.user)
-
-#     return redirect("skillset_list")
 
 
 @login_required
@@ -283,3 +225,93 @@ def save(request):
     context = { 'my_skills' : request.user.user_skills.all() }
     print(context['my_skills'])
     return render(request, 'base/loggedin.html', context)
+
+@require_GET
+@login_required
+def add_skills(request):
+    return render(request, 'base/add_skills.html')
+
+@require_GET
+@login_required
+def my_profile(request):
+    user_projects = request.user.user_project.all()
+    context = {'user' : request.user, 'my_skills' : request.user.user_skills.all(), 'projects' : user_projects}
+    return render(request, 'base/my_profile.html', context)
+
+@require_http_methods(['GET', 'POST'])
+@login_required
+def add_project(request):
+    if request.method == 'GET':
+        print('get form')
+        form = AddProjectForm(current_user = request.user)
+
+    else:
+        form = AddProjectForm(request.POST, current_user = request.user)
+        print("post")
+        if form.is_valid():
+            project_instance = form.save(commit = False)
+            print('valid')
+            # project_instance = form.save(commit = False)
+            selected_user_mentor = form.cleaned_data.get('mentor')
+            project_instance.of_user = request.user
+            form.save()
+            # print(Project.title)
+            user_projects = request.user.user_project.all()
+            context = { 'Project' : user_projects }
+            print('before')
+            return redirect(request, 'base/my_profile.html', context)
+
+    return render(request, 'base/add_project.html', {'form' : form})
+
+def open_profile(request, id = None):
+    instance = get_object_or_404(MyUser, id=id)
+    skills = instance.user_skills.all()
+    print(skills)
+    user_projects = instance.user_projects.all()
+    context = {'instance' : instance, 'projects' : user_projects, 'skills' : skills}
+    return render(request, 'base/open_profile.html', context)
+
+
+@require_GET
+@login_required
+def otherhome(request):
+    users = MyUser.objects.all()
+    context = {'users': users, 'friends' : request.user.following.all()}
+    return render(request, 'base/follow.html', context)
+
+
+@require_GET
+@login_required
+def follow(request, id = None):
+    print("in follow")
+    to_user = get_object_or_404(MyUser, id=id)
+    from_user = request.user
+    data = {'result' : 0}
+    if to_user.id != from_user.id and to_user not in from_user.following.all():
+        from_user.following.add(to_user)
+        data['result'] = 1
+        return JsonResponse(data, safe = False)
+    else:
+        if from_user.id == to_user.id:
+            data['error'] = "You Cannot follow yourself"
+
+        else:
+            data['error'] = "You are already following this user"    
+        return JsonResponse(data, safe = False)
+
+@require_GET
+@login_required
+def unfollow(request, id = None):
+    to_user = get_object_or_404(MyUser, id = id)
+    from_user = request.user
+    data = {'result' : 0}
+    if to_user.id != from_user.id and to_user in from_user.following.all():
+        from_user.following.remove(to_user)
+        data['result'] = 1
+        return JsonResponse(data, safe = False)
+    else:
+        if from_user.id == to_user.id:
+            data['error'] = "You cannot unfollow yourself"
+        else:
+            data['error'] = "You are not following this user"
+        return JsonResponse(data, safe = False)

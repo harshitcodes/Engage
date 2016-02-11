@@ -1,8 +1,11 @@
 from django import forms
 from django.contrib.auth import authenticate
-from .models import MyUser
+from .models import *
 from django.forms import extras
 from material import *
+from django.db.models import Q
+from django.utils.text import slugify
+from django.core.validators import URLValidator
 
 class SignupForm(forms.ModelForm):
 	password1 = forms.CharField(label='Password', widget = forms.PasswordInput)
@@ -70,12 +73,14 @@ class SetPasswordForm(forms.Form):
 class ProfileForm(forms.ModelForm):
 	old_password = forms.CharField(label = 'Current Password', widget = forms.PasswordInput, required = False)
 	new_password = forms.CharField(label = 'New Password', widget = forms.PasswordInput, required = False)
-	dob = forms.DateField(widget = extras.SelectDateWidget(years = [y for y in range(1990, 2000)]), required = False)
+	# dob = forms.DateField(widget = extras.SelectDateWidget(years = [y for y in range(1990, 2000)]), required = False)
 	layout = Layout(
 		Row(Span6('first_name'), Span6('last_name')),
 		Row('gender'),
 		Row(Span4('dob'), Span6('roll_no')),
 		Row('branch'),
+		Row('year'),
+		Row('profile_links'),
 		# Row('skill_set'),
 		Row('old_password', 'new_password'),
 		Row('profile_pic'), 
@@ -112,7 +117,15 @@ class ProfileForm(forms.ModelForm):
 		if data_new_password and data_new_password == data_old_password:
 			raise forms.ValidationError("New Password should not be same as old password")
 		return data_new_password
-		
+
+	def clean_profile_links(self):
+		data_profile_links = self.cleaned_data['profile_links']
+		# validate = URLValidator(verify_exists = True)
+		return data_profile_links
+
+
+
+
 	# def clean_username(self):
 	# 	data_username = self.cleaned_data['username']
 	# 	if data_username != self.instance.username:
@@ -132,7 +145,7 @@ class ProfileForm(forms.ModelForm):
 		instance = getattr(self, 'instance', None)
 		if instance and instance.pk:
 			return instance.roll_no
-		if len(data_roll_no) > 11:
+		if len(data_roll_no) > 11 or len(data_roll_no) < 11:
 			raise forms.ValidationError("Invalid Roll Number")
 		self.instance['roll_no'].widget.attrs['readonly'] = True	
 		return data_roll_no	
@@ -148,7 +161,34 @@ class ProfileForm(forms.ModelForm):
 
 	class Meta:
 		model = MyUser
-		fields = ['first_name', 'last_name', 'profile_pic', 'roll_no', 'gender', 'branch',]
+		fields = ['first_name', 'last_name', 'profile_pic', 'roll_no', 'gender', 'branch','dob', 'profile_links', 'year']
+		widgets = {'dob': extras.SelectDateWidget(years = [y for y in range(1990, 2002)])}
 
 
 
+class AddProjectForm(forms.ModelForm):
+	# mentor = forms.ModelMultipleChoiceField(queryset = MyUser.objects.all(), )
+	layout = Layout(
+		Fieldset("Please Enter the details of your Project", 
+			Row('title'),
+			Row('description'),
+			# Row(Span4('is_team'), Span6('team_member')),
+			Row('mentor'),
+			Row('related_link'),
+		))
+
+	def __init__(self, *args, **kwargs):
+		print('in')
+		current_user = kwargs.pop('current_user', None)
+		print(current_user)
+		super(AddProjectForm, self).__init__(*args, **kwargs)
+		self.fields['mentor'] = forms.ModelChoiceField(queryset = MyUser.objects.exclude(id = current_user.id))
+
+
+	class Meta:
+		model = Project
+		fields = ['title', 'description', 'mentor', 'related_link']
+		widgets = {'is_team': forms.CheckboxInput}
+
+
+#, 'is_team', 'team_member'

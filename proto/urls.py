@@ -21,4 +21,6 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', 'account.views.base', name = 'base'),
     url(r'^account/', include('account.urls')),
+    url(r'^feed/', include('feed.urls')),
+    url('', include('social.apps.django_app.urls', namespace='social')),
 ]+ static.static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

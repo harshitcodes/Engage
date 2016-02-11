@@ -1,0 +1,162 @@
+{% extends 'base/base.html'%}
+{% load staticfiles %}
+{% load endless %}
+{% block pagetitle %} Engage | Timeline {% endblock %}
+<link type="text/css" rel="stylesheet" href="static/css/materialize.min.css"  media="screen,projection"/>
+{% block content %}
+	<nav class = "#006064 blue lighten-2 fixed "> 
+    <div class="nav-wrapper blue lighten-2 container">
+      <a href="#!" class="brand-logo" style="padding-left : 5%;">Engage</a>
+
+      <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="material-icons">menu</i></a>
+      <ul class="right hide-on-med-and-down">
+        
+        <li><a href="{% url 'add_project' %}">Add Project</a></li>
+        <li><a href="{% url 'add_skills'%}"> Add Skills </a></li>        
+        
+        <!-- Dropdown Trigger -->
+        <li><a class='dropdown-button' href='#' data-activates='dropdown2'>Settings
+        <i class="mdi-navigation-arrow-drop-down right"></i></a></li>
+        
+        
+        <li><a href = "{% url 'my_profile' %}">
+        {% if request.user.profile_pic %}
+        <img src = "http://127.0.0.1:8000/media/{{request.user.profile_pic}}"  padding-top = "5px" width="50px" max-height="50px" class="circle" position = "absolute"></img>
+        {% else%}
+        <i class="material-icons">account_box</i>
+        {% endif %}
+        </a></li><span>Hi {{request.user.username}}</span>
+        </li>
+      </ul>
+
+      <ul class="side-nav" id="mobile-demo">
+        <li><a href="{% url 'add_project' %}">Add Project</a></li>
+        <li><a href="{% url 'add_skills'%}"> Add Skills </a></li>
+        <li><a class='dropdown-button' href='#' data-activates='dropdown1'>Settings
+        <i class="mdi-navigation-arrow-drop-down right"></i></a></li>
+      </ul>
+      </div>
+  
+    <ul id='dropdown2' class='dropdown-content'>
+          <li><a href="{% url 'otherhome' %}">Explore People</a></li>
+          <li class="divider"></li>
+          <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+          <li class="divider"></li>
+          <li><a href="{% url 'logout' %}">Logout</a></li>
+    </ul>
+    
+
+    
+    <ul id='dropdown1' class='dropdown-content'>
+          <li><a href="{% url 'otherhome' %}">Explore People</a></li>
+          <li class="divider"></li>
+          <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+          <li class="divider"></li>
+          <li><a href="{% url 'logout' %}">Logout</a></li>
+    </ul>
+    </div>
+    </nav>
+
+    <div class="col s12 m8 19">
+    <h4><a href = "{% url 'post_create' %}" style="" class="blue-text">Engage Yourself with a Post.</a></h4>
+    </div>
+    {% for post in posts%}
+    {% if post.user in followers or post.user.id == request.user.id %}
+    <div class="row">
+        
+        <div class="col s5 m6">
+          <div class="card #ffffff">
+            <div class="card-content white-text">
+            <div class = 'col s2' style = "display : 'flex' width : '40px'">
+              {% if post.user.profile_pic %}
+              <img src = "http://127.0.0.1:8000/media/{{post.user.profile_pic}}" width="40px" height = "40x"class="circle responsive-img valign-wrapper">
+              
+              {% else %}
+              
+              <img src = "http://127.0.0.1:8000/media/media/profile_pics/user.ico" width="40px" height = "40x"class="circle responsive-img valign-wrapper">
+              {% endif %}
+              </div><a href="{% url 'open_profile' post.user.id %}" class="black-text">{{post.user.first_name}}{{post.user.last_name}}</a><br><br>
+
+              {% if request.user == post.user%}     
+              <a href = "{% url 'update' post.id %}"><i class="material-icons" style = "float : right">mode_edit</i></a>
+              {% endif %}
+
+              <a href = "{% url 'detail' post.id %}"><span class="card-title grey-text Regular 13sp">{{post.text}}</span></a>
+              {% if post.image %}
+
+              <a data-target = "modal1" class="waves-effect waves-light modal-trigger" href="#modal1">
+              <img src = "http://127.0.0.1:8000/media/{{post.image}}" class = "responsive-img">
+              </a>
+                  <!-- Modal Structure -->
+                  <div id="modal1" class="modal">
+                    <div class="modal-content">
+                      <img src = "http://127.0.0.1:8000/media/{{post.image}}" class = "responsive-img">
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                  </div>
+              
+              {% endif %}<br>
+              {% if post.upload_file %}
+              <a href = "http://127.0.0.1:8000/media/{{post.upload_file}}" download class="white-text">
+                <i class="material-icons blue-text ">get_app</i><span class = "blue-text"> {{post.upload_file}}</span>
+              </a>
+              {% endif %}
+              <p>{{post.link}}</p>
+              <span style = "float : right" class = "grey-text small"> {{post.created_at }}</span>
+            </div>
+            <div class="card-action">
+            <!-- <span> {{post.created_at}}</span> -->
+             <!-- Load Facebook SDK for JavaScript -->
+              {% if request.user == post.user%}
+              <a href="{% url 'post_delete' post.id %}" class = "btn disabled blue-grey darken-3 right">Delete</a>
+              <!-- <a href = "{% url 'update' post.id %}"><i class="material-icons" >mode_edit</i></a> -->
+              {% endif %}
+              <!-- <div data-mobile = "True" data-width = "100%" class="fb-comments" data-href="{{request.build_absolute_uri}}" data-numposts="5"></div> -->
+            </div>
+          </div>
+        </div>
+    </div>
+    {% endif %}
+  	{% endfor %}	
+    
+    <div class="pagination">
+      <span class="step-links">
+          {% if posts.has_previous %}
+              <a href="?page={{ posts.previous_page_number }}">previous</a>
+          {% endif %}
+
+          <span class="current">
+              Page {{ posts.number }} of {{ posts.paginator.num_pages }}.
+          </span>
+
+          {% if posts.has_next %}
+              <a href="?page={{ posts.next_page_number }}">next</a>
+          {% endif %}
+      </span>
+    </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+   $(document).ready(function(){
+       $('.modal-trigger').leanModal();
+       $('#modal1').openModal();
+       $('#modal1').closeModal();
+       $('.dropdown-button').dropdown({
+      inDuration: 300,
+      outDuration: 225,
+      constrain_width: false, // Does not change width of dropdown to that of the activator
+      hover: true, // Activate on hover
+      gutter: 0, // Spacing from edge
+      belowOrigin: false, // Displays dropdown below the button
+      alignment: 'left' // Displays dropdown with edge aligned to the left of button
+    }
+  );
+  });
+
+</script>
+
+
+{% endblock %}

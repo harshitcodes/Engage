@@ -17,7 +17,7 @@ Skill_search = (function(){
 			$('.collection').append(el);
 		}
 		if($('.final-save').length<1){
-		var ele = $('<a class="btn waves-effect waves-light final-save" type="submit" href = "http://127.0.0.1:8000/account/myprofile" name="action"></a>');
+		var ele = $('<a class="btn waves-effect waves-light final-save" type="submit" href = "http://127.0.0.1:8000/account/my_profile" name="action"></a>');
 		ele.html('Save<i class = "material-icons right">send</i>');
 		$('.collection').append(ele);
 		}

@@ -1,0 +1,43 @@
+{% extends 'base/loggedin.html' %}
+{% load bootstrap3 %}
+{% load staticfiles %}
+{% block pagetitle %} Engage | Add Project {% endblock %}
+ <link type="text/css" rel="stylesheet" href="static/css/materialize.min.css"  media="screen,projection"/>
+{% block content %}
+<nav class = "#006064 cyan darken-4">
+    <div class="nav-wrapper #006064 cyan darken-4 container">
+      <a href="#!" class="brand-logo">Engage</a>
+      <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="material-icons">menu</i></a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+        <li><a href="{% url 'add_project' %}">Add Project</a></li>
+        <li><a href="{% url 'add_skills'%}"> Add Skills </a></li>        
+        <li><a href="{% url 'logout' %}">Settings</a></li>
+        <li><a href = "{% url 'my_profile' %}"><img src = "http://127.0.0.1:8000/media/{{request.user.profile_pic}}" padding-top = "5px" width="50px" height="50px" class="circle responsive-img valign-wrapper" position = "absolute"></img></a></li><span>Hii {{request.user.username}}</span>
+
+      </ul>
+      <ul class="side-nav" id="mobile-demo">
+        <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+        <li><a href="{% url 'add_project' %}">Add Project</a></li>
+        <li><a href="badges.html">Settings</a></li>
+
+    </div>
+</nav>
+
+<main class = 'container'>
+	<div class = 'row' style="padding-top: '100px'">
+	<!-- <div class = "col s6"><h1 class="flow-text">Add Skills To Your Profile</h1></div> -->
+	</div>
+    <h4>Add Project To Your Portfolio.</h4>
+      <form action="{% url 'add_project' %}" method="post" class="form" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                <button type="submit" class="btn btn-primary" href = "{% url 'my_profile' %}">
+                    {% bootstrap_icon "star" %} Save
+                </button>
+            {% endbuttons %}
+        </form>
+</main>
+{% endblock %}
+

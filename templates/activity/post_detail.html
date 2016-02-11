@@ -1,0 +1,84 @@
+{% extends 'base/base.html'%}
+{% load staticfiles %}
+{% block pagetitle %} Engage | Feed {% endblock %}
+<link type="text/css" rel="stylesheet" href="static/css/materialize.min.css"  media="screen,projection"/>
+{% block content %}
+	<nav class = "#006064 cyan darken-4">
+    <div class="nav-wrapper #006064 cyan darken-4 container">
+      <a href="#!" class="brand-logo">Engage</a>
+      <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="material-icons">menu</i></a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+        <li><a href="{% url 'add_project' %}">Add Project</a></li>
+        <li><a href="{% url 'add_skills'%}"> Add Skills </a></li>        
+        <li><a href="{% url 'logout' %}">Settings</a></li>
+        <li><a href = "{% url 'my_profile' %}"><img src = "http://127.0.0.1:8000/media/{{request.user.profile_pic}}" padding-top = "5px" width="50px" height="50px" class="circle responsive-img valign-wrapper" position = "absolute"></img></a></li><span>Hi {{request.user.username}}</span>
+
+      </ul>
+      <ul class="side-nav" id="mobile-demo">
+        <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+        <li><a href="{% url 'add_project' %}">Add Project</a></li>
+        <li><a href="badges.html">Settings</a></li>
+
+    </div>
+  	</nav>
+
+  	<div class="container">
+     
+    <div class="row">
+        <div class="col s12 m6">
+          <div class="card #ffffff">
+            <div class="card-content white-text">
+            <div class = 'col s2' style = "display : 'flex' width : '40px'">
+              {% if instance.user.profile_pic %}
+              <img src = "http://127.0.0.1:8000/media/{{instance.user.profile_pic}}" width="40px" height = "40x"class="circle responsive-img valign-wrapper">
+              
+              {% else %}
+              
+              <img src = "http://127.0.0.1:8000/media/media/profile_pics/user.ico" width="40px" height = "40x"class="circle responsive-img valign-wrapper">
+              {% endif %}
+              </div><a href="{% url 'open_profile' instance.user.id %}" class="black-text">{{instance.user.first_name}}{{instance.user.last_name}}</a><br><br>
+
+              {% if request.user == instance.user%}     
+              <a href = "{% url 'update' instance.id %}"><i class="material-icons" style = "float : right">mode_edit</i></a>
+              {% endif %}
+
+              <a href = "{% url 'detail' instance.id %}"><span class="card-title grey-text Regular 13sp">{{instance.text}}</span></a>
+              {% if instance.image %}
+
+              <a data-target = "modal1" class="waves-effect waves-light modal-trigger" href="#modal1">
+              <img src = "http://127.0.0.1:8000/media/{{instance.image}}" class = "responsive-img">
+              </a>
+                  <!-- Modal Structure -->
+                  <div id="modal1" class="modal">
+                    <div class="modal-content">
+                      <img src = "http://127.0.0.1:8000/media/{{instance.image}}" class = "responsive-img">
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                  </div>
+              
+              {% endif %}<br>
+              {% if instance.upload_file %}
+              <a href = "http://127.0.0.1:8000/media/{{instance.upload_file}}" download class="white-text">
+                <button class="grey">Download</button><span class = "black-text">{{instance.upload_file}}</span>
+              </a>
+              {% endif %}
+              <p>{{instance.link}}</p>
+              <span style = "float : right" class = "grey-text small"> {{instance.created_at }}</span>
+            </div>
+            <div class="card-action">
+            <!-- <span> {{instance.created_at}}</span> -->
+             <!-- Load Facebook SDK for JavaScript -->
+              {% if request.user == instance.user%}
+              <a href="{% url 'post_delete' instance.id %}" class = "btn disabled blue-grey darken-3 right">Delete</a>
+              <!-- <a href = "{% url 'update' instance.id %}"><i class="material-icons" >mode_edit</i></a> -->
+              {% endif %}
+              <div data-mobile = "True" data-width = "100%" class="fb-comments" data-href="{{request.build_absolute_uri}}" data-numinstances="5"></div>
+            </div>
+          </div>
+        </div>
+    </div>
+    </div>
+  		
+{% endblock %}

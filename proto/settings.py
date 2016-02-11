@@ -40,8 +40,11 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'account',
+    'feed',
     'material',
     'bootstrap3',
+    'endless_pagination',
+    'social.apps.django_app.default',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -55,6 +58,29 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.security.SecurityMiddleware',
 )
 
+
+AUTHENTICATION_BACKENDS = (
+    'social.backends.open_id.OpenIdAuth',
+    'social.backends.google.GoogleOpenId',
+    'social.backends.google.GoogleOAuth2',
+    'social.backends.google.GoogleOAuth',
+    'social.backends.twitter.TwitterOAuth',
+    'social.backends.yahoo.YahooOpenId',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+
+SOCIAL_AUTH_FACEBOOK_KEY = '514982088710466'
+SOCIAL_AUTH_FACEBOOK_SECRET = '2635efec2db58693dd3c0e4e6428e0ad'
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+  'locale': 'ru_RU',
+  'fields': 'id, name, email, age_range',
+}
+
+
+
+
 ROOT_URLCONF = 'proto.urls'
 
 TEMPLATES = [
@@ -66,6 +92,8 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'social.apps.django_app.context_processors.backends',
+                'social.apps.django_app.context_processors.login_redirect',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -74,6 +102,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'proto.wsgi.application'
+
+from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
+TEMPLATE_CONTEXT_PROCESSORS += (
+    'django.core.context_processors.request',
+)
+
+# STREAM_API_KEY = '5phqt4nkc5bv'
+# STREAM_API_SECRET = '85juntzk2va9mmgess7ytvj49xrcc3shvu6fvr8vxmzau6gcx4f49j332jtwfsdj'
+
+
 
 
 # Database

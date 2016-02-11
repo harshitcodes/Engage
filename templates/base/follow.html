@@ -1,0 +1,52 @@
+{% extends 'base/loggedin.html' %}
+{% load staticfiles %}
+{% block pagetitle %} Engage | Related People {% endblock %}
+ <link type="text/css" rel="stylesheet" href="static/css/materialize.min.css"  media="screen,projection"/>
+{% block content %}
+<nav class = "#006064 cyan darken-4">
+    <div class="nav-wrapper #006064 cyan darken-4 container">
+      <a href="#!" class="brand-logo">Engage</a>
+      <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="material-icons">menu</i></a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+        <li><a href="{% url 'add_project' %}">Pings</a></li>
+        <li><a href="{% url 'add_skills'%}"> Add Skills </a></li>        
+        <li><a href="{% url 'logout' %}">Settings</a></li>
+        <li><a href = "media/{{request.user.profile_pic}}" href = "{% url 'my_profile' %}"><img src = "http://127.0.0.1:8000/media/{{request.user.profile_pic}}" padding-top = "5px" width="50px" height="50px" class="circle responsive-img valign-wrapper" position = "absolute"></img></a></li><span>Hii {{request.user.username}}</span>
+
+      </ul>
+      <ul class="side-nav" id="mobile-demo">
+        <li><a href="{% url 'edit_profile' %}">Edit Profile</a></li>
+        <li><a href="{% url 'add_project' %}">Pings</a></li>
+        <li><a href="badges.html">Settings</a></li>
+
+    </div>
+</nav>
+
+<main>
+		<div class="container">
+		<h4>People You May Know</h4>
+		
+	    {% for user in users %}
+	    <div class="collection">
+	    {{user.username}}		
+		{% if user in friends %}
+        	<a href="#!" class="collection-item fnuf unfollow right" data-uid = "{{user.id}}">Unfollow</a>
+        {% else %}	
+		    <a href="#!" class="collection-item fnuf follow right" data-uid = "{{user.id}}">Follow</a>
+		{% endif %}
+      	</div>
+      	{% endfor %} 
+		</div>	
+	</main>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src = "{% static 'base/js/followunfollow.js' %}"></script>
+<script>
+    function init() {
+       	followUnfollow.init();
+        }
+        $(document).ready(init);
+</script>
+{% endblock %}

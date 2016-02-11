@@ -1,0 +1,29 @@
+Manifest file for proto :
+
+USERS :- 
+	1.User Profiles
+	2.Adding skills - Ajax
+	2.Search based on skills Ajax
+	3.projects - team and mentors
+	4.follow/unfollow users
+	5.social authentication and extraction of basic info from the accounts.
+
+
+Activity :-
+
+	1.Adding post(image, file)
+	2.Deleting post by the creator
+	3.searching a post(to be implemented today)
+	4.posts to be displayed to the followers.
+	5.ajax based endless scrolling
+	6.Comments on the posts.
+
+
+
+work left : 
+
+-social auth
+-front end change
+-notification system if post from folowers
+-ajax endless scrolling on posts
+-comments on the posts
